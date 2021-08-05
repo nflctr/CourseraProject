@@ -1,0 +1,76 @@
+---
+Title   : "Quantmod IV"
+Author  : "cms"
+Date    : "9/4/2019"
+Output  : html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(PerformanceAnalytics)
+library(quantmod)
+library(tidyverse)
+options("getSymbols.yahoo.warning"=FALSE)
+options("getSymbols.warning4.0"=FALSE)
+```
+
+# Pull down stock data for MSFT using get symbols
+
+```{r}
+getSymbols("MSFT")
+price <- Cl(MSFT)                # Close Price
+r <- price/Lag(price) - 1        # % price change
+delta <- 0.005                   # threshold
+signal <- c(0)                   # first date has no signal
+
+# Loop over all trading days (except the first)
+for (i in 2:length(price)){
+  if (r[i] > delta) {signal[i] <- 1}
+  else {signal[i] <- 0}}
+
+signal <- reclass(signal, price)
+tail(signal, n = 20)
+```
+
+# Calculate the Daily Percentage Change on Filter
+
+```{r}
+trade <- Lag(signal, 1)
+ret <- dailyReturn(MSFT)*trade
+names(ret) <- "Filter"
+charts.PerformanceSummary(ret, main = "Simple Filter")
+```
+
+# Start Building out new Model
+
+```{r}
+day <- 14
+price <- Cl(MSFT)
+signal <- c(0)
+rsi <- RSI(price, day)
+```
+
+```{r}
+signal[1:day+1] <- 0
+
+for (i in (day+1):length(price)) {
+  if(rsi[i] < 30) {signal[i] <- 1}
+  else {signal[i] <- 0}
+}
+signal <- reclass(signal, Cl(MSFT))
+```
+
+```{r}
+trade2 <- Lag(signal)
+ret2 <- dailyReturn(MSFT)*trade2
+head(ret2, 200)
+```
+
+```{r}
+names(ret) <- "Simple"
+names(ret2) <- "RSI"
+retcomb <- cbind(ret, ret2)
+head(retcomb)
+charts.PerformanceSummary(retcomb, main = "Simple Filter vs RSI Filter")
+```
+
