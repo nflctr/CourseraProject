@@ -1,0 +1,78 @@
+---
+title   : "DPLYR Introduction"
+author  : "Shakespeare"
+date    : "September 3, 2019"
+output  : html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+#Quick Look at Dataframes
+
+```{r pressure, echo=FALSE, fig.cap="A Caption", out.width='100%'}
+knitr::include_graphics("df.png")
+```
+
+#Filter
+
+```{r}
+mpg
+head(mpg)
+str(mpg)
+dim(mpg)
+names(mpg)
+```
+
+```{r}
+hist(mpg$cty)
+filter(mpg, cty > 25)
+filter(mpg, cty > 25 & model == "civic")
+```
+
+#Select
+
+```{r}
+select(mpg, manufacturer)
+names(mpg)
+select(mpg, 7)
+select(mpg, c(7,8,9))
+```
+
+#Pipe
+
+```{r}
+#What model of car get the worst gas mileage (< 15 mpg)
+mpg%>%select(2,8)%>%filter(cty < 15)
+mpg%>%filter(cty < 15)%>%select(2)
+```
+
+#Group by , Summarise
+
+```{r}
+names(mpg)
+select(mpg, 7)
+mpg%>%
+  group_by(drv)%>%
+  summarise(n = n(), avgcity = mean(cty, na.rm = T))
+```
+
+#Mutate , Arrange
+
+```{r}
+mpg%>%
+  group_by(drv)%>%
+  summarise(n = n(), avgcity = mean(cty, na.rm = T))%>%
+  mutate(test = n*avgcity)
+
+mpg%>%
+  mutate(conversation = displ*.16)%>%
+  arrange(desc(cty)) # buat ascending order
+```
+
