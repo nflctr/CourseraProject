@@ -1,0 +1,104 @@
+---
+Title   : "Quantmod III"
+Author  : "cms"
+Date    : "9/4/2019"
+Output  : html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(quantmod)
+library(tidyverse)
+```
+
+# Pull down stock data for TSLA using Get Symbols
+
+```{r}
+tsla <- getSymbols("TSLA", auto.assign = F)
+head(tsla)
+```
+
+# Store Closing Price (adjusted for stock splits)
+
+```{r}
+tsla_cl <- tsla$TSLA.Close
+head(tsla_cl)
+tsla_cl2 <- Ad(tsla)
+head(tsla_cl2)
+```
+
+# What is lag
+
+```{r}
+?lag
+head(Lag(tsla_cl, 2))
+```
+
+
+# Remove Scientific Notation
+
+```{r}
+options(scipen = 9999)
+```
+
+# Create daily % change vector
+
+```{r}
+daily_change <- tsla_cl/Lag(tsla_cl, 1) -1
+head(daily_change)
+```
+
+# Look at histogram of percentage change
+
+```{r}
+hist(daily_change, 40, col = "magenta")
+```
+
+```{r}
+buy_signal <- .04
+```
+
+# Loop Over all trading days (except the first)
+buy_signal == parameter
+tsla_cl == data
+daily_change == %change
+signal == 1 or 0 buy/sell
+
+```{r}
+signal <- c(NULL)
+```
+
+```{r}
+for (i in 2:length(tsla_cl)) {
+  if (daily_change[i] > buy_signal) {signal[i] <- 1}
+  else {signal[i] <- 0}
+}
+head(signal, 40)
+```
+
+# Reclassify signal to an xts object (tying it to a date)
+
+```{r}
+signal <- reclass(signal, tsla_cl)
+head(signal, 20)
+```
+
+# Chart the Series
+
+```{r}
+chartSeries(tsla_cl,
+            type = "l",
+            subset = "2011-01::2012-01",
+            TA = c(addBBands(n = 20, sd = 2)),
+            theme = chartTheme("black"))
+?addTA
+addTA(signal,
+      type = 's',
+      col = "red")
+chartSeries(msft,
+            subset = "2007",
+            TA = c(addBBands(n = 20, sd = 2), addRSI(),
+            addEMA(n = 30), addMACD()),
+            theme = chartTheme("black"))
+```
+
